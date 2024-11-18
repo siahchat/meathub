@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Creator with Comments</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .form-group textarea {
+      resize: none;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 15px;
+      color: #fff;
+      background: #007BFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .preview {
+      margin-top: 20px;
+    }
+    .preview img, .preview video, .preview audio {
+      max-width: 100%;
+      display: block;
+      margin: 10px 0;
+    }
+    .comments {
+      margin-top: 20px;
+    }
+    .comment {
+      margin-left: 20px;
+      padding: 10px;
+      border-left: 2px solid #007BFF;
+    }
+    .reply-btn {
+      margin-top: 5px;
+      font-size: 14px;
+      color: #007BFF;
+      cursor: pointer;
+    }
+    .reply-form {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Create a Post</h1>
+    <form id="postForm">
+      <div class="form-group">
+        <label for="postText">Post Content:</label>
+        <textarea id="postText" rows="4" placeholder="Write your post..."></textarea>
+      </div>
+      <div class="form-group">
+        <label for="uploadFile">Upload Files:</label>
+        <input type="file" id="uploadFile" accept="image/*,video/*,audio/*" multiple>
+      </div>
+      <div class="form-group">
+        <label for="youtubeLink">Embed YouTube Video:</label>
+        <input type="url" id="youtubeLink" placeholder="Paste YouTube link here">
+      </div>
+      <button type="button" class="btn" onclick="createPost()">Post</button>
+    </form>
+
+    <div id="previewContainer" class="preview"></div>
+    <div id="commentsContainer" class="comments"></div>
+  </div>
+
+  <script>
+    function createPost() {
+      const postText = document.getElementById('postText').value;
+      const files = document.getElementById('uploadFile').files;
+      const youtubeLink = document.getElementById('youtubeLink').value;
+      const previewContainer = document.getElementById('previewContainer');
+
+      // Clear the preview container
+      previewContainer.innerHTML = '';
+
+      // Add post text
+      if (postText) {
+        const textElement = document.createElement('p');
+        textElement.textContent = postText;
+        previewContainer.appendChild(textElement);
+      }
+
+      // Add uploaded files
+      Array.from(files).forEach(file => {
+        const fileURL = URL.createObjectURL(file);
+        let element;
+
+        if (file.type.startsWith('image/')) {
+          element = document.createElement('img');
+        } else if (file.type.startsWith('video/')) {
+          element = document.createElement('video');
+          element.controls = true;
+        } else if (file.type.startsWith('audio/')) {
+          element = document.createElement('audio');
+          element.controls = true;
+        }
+
+        if (element) {
+          element.src = fileURL;
+          previewContainer.appendChild(element);
+        }
+      });
+
+      // Embed YouTube video
+      if (youtubeLink) {
+        try {
+          const url = new URL(youtubeLink);
+          const videoId = url.searchParams.get('v');
+          if (videoId) {
+            const embedURL = `https://www.youtube.com/embed/${videoId}`;
+            const iframe = document.createElement('iframe');
+            iframe.width = '100%';
+            iframe.height = '315';
+            iframe.src = embedURL;
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            previewContainer.appendChild(iframe);
+          } else {
+            alert('Invalid YouTube URL.');
+          }
+        } catch (e) {
+          alert('Invalid URL format.');
+        }
+      }
+    }
+
+    function addComment(parentId) {
+      const commentText = prompt('Enter your comment:');
+      if (commentText) {
+        const parentElement = parentId
+          ? document.getElementById(parentId)
+          : document.getElementById('commentsContainer');
+
+        const commentElement = document.createElement('div');
+        commentElement.className = 'comment';
+        commentElement.id = `comment-${Date.now()}`;
+        commentElement.innerHTML = `
+          <p>${commentText}</p>
+          <span class="reply-btn" onclick="addComment('${commentElement.id}')">Reply</span>
+        `;
+
+        parentElement.appendChild(commentElement);
+      }
+    }
+
+    // Add an initial button to start the comment thread
+    const commentsContainer = document.getElementById('commentsContainer');
+    const initialReplyButton = document.createElement('span');
+    initialReplyButton.className = 'reply-btn';
+    initialReplyButton.textContent = 'Add a comment';
+    initialReplyButton.onclick = () => addComment();
+    commentsContainer.appendChild(initialReplyButton);
+  </script>
+</body>
+</html>
